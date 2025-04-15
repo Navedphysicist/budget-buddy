@@ -31,12 +31,6 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
             detail="Username already taken"
         )
 
-    if db.query(DbUser).filter(DbUser.phone_number == user.phone_number).first():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Phone number already registered"
-        )
-
     # Generate verification code
     verification_code = twilio_service.generate_verification_code()
 
