@@ -60,8 +60,8 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/verify", response_model=Dict[str, str])
 def verify_user(verification: UserVerify, db: Session = Depends(get_db)):
-    user = db.query(DbUser).filter(DbUser.phone_number ==
-                                   verification.phone_number).first()
+    user = db.query(DbUser).filter(DbUser.email ==
+                                   verification.email).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -114,5 +114,9 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
 
     return {
         "access_token": access_token,
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "username" : user.username,
+        "phone_number" : user.phone_number,
+        "user_email" : user.email
+
     }
