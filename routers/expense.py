@@ -97,7 +97,7 @@ def create_expense(
     db_expense = DbExpense(
         **expense_data,
         category_id=category.id,
-        payment_mode_id=payment_mode.id,
+        payment_mode_id=payment_mode,
         user_id=current_user.id
     )
 
