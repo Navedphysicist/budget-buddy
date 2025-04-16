@@ -16,5 +16,5 @@ class DbExpense(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     category = relationship("DbCategory", back_populates="expenses")
-    payment_mode = relationship("DbPaymentMode", back_populates="expenses")
+    paymentMode = relationship("DbPaymentMode", back_populates="expenses")
     user = relationship("DbUser", back_populates="expenses")

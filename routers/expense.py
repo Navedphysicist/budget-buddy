@@ -80,16 +80,17 @@ def create_expense(
         db.add(category)
         db.flush()
 
-    # Then, find or create the payment mode
-    payment_mode = db.query(DbPaymentMode).filter(
+    print(expense,"PaymentMode")
+
+    paymentMode = db.query(DbPaymentMode).filter(
         DbPaymentMode.name == expense.paymentMode.name,
         DbPaymentMode.icon == expense.paymentMode.icon,
         DbPaymentMode.color == expense.paymentMode.color
     ).first()
 
-    if not payment_mode:
-        payment_mode = DbPaymentMode(**expense.paymentMode.model_dump())
-        db.add(payment_mode)
+    if not paymentMode:
+        paymentMode = DbPaymentMode(**expense.paymentMode.model_dump())
+        db.add(paymentMode)
         db.flush()
 
     # Create the expense with the found/created category and payment mode
@@ -97,7 +98,7 @@ def create_expense(
     db_expense = DbExpense(
         **expense_data,
         category_id=category.id,
-        payment_mode_id=payment_mode,
+        payment_mode_id=paymentMode.id,
         user_id=current_user.id
     )
 
@@ -159,18 +160,18 @@ def update_expense(
     # Handle payment mode update if provided
     if 'paymentMode' in update_data:
         payment_data = update_data.pop('paymentMode')
-        payment_mode = db.query(DbPaymentMode).filter(
+        paymentMode = db.query(DbPaymentMode).filter(
             DbPaymentMode.name == payment_data['name'],
             DbPaymentMode.icon == payment_data['icon'],
             DbPaymentMode.color == payment_data.get('color')
         ).first()
 
-        if not payment_mode:
-            payment_mode = DbPaymentMode(**payment_data)
-            db.add(payment_mode)
+        if not paymentMode:
+            paymentMode = DbPaymentMode(**payment_data)
+            db.add(paymentMode)
             db.flush()
 
-        expense.payment_mode_id = payment_mode.id
+        expense.paymentMode_id = paymentMode.id
 
     # Update other fields
     for field, value in update_data.items():
@@ -198,7 +199,7 @@ def get_expenses_csv(
         'note': expense.note,
         'recurring': expense.recurring,
         'category': expense.category.name if expense.category else None,
-        'payment_mode': expense.payment_mode.name if expense.payment_mode else None
+        'paymentMode': expense.paymentMode.name if expense.paymentMode else None
     } for expense in expenses]
 
     # Create CSV

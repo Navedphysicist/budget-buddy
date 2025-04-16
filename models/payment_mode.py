@@ -9,4 +9,4 @@ class DbPaymentMode(Base):
     name = Column(String, nullable=False)
     icon = Column(String, nullable=False)
     color = Column(String, nullable=True)
-    expenses = relationship("DbExpense", back_populates="payment_mode")
+    expenses = relationship("DbExpense", back_populates="paymentMode")
