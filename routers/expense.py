@@ -11,49 +11,49 @@ from typing import List, Optional
 from datetime import datetime
 import pandas as pd
 from fastapi.responses import StreamingResponse
-import io
 from utils.auth import get_current_user
+from calendar import monthrange
 
 router = APIRouter()
 
 
 @router.get("/expense", response_model=List[ExpenseSchema])
 def get_expenses(
-    category: Optional[str] = None,
-    recurring: Optional[bool] = None,
-    month: Optional[str] = None,
-    search: Optional[str] = None,
-    page: int = Query(1, gt=0),
+    category: Optional[str] = Query(None, min_length=1, description="Category name (case-sensitive partial match)"),
+    recurring: Optional[bool] = Query(None, description="Filter by recurring status: true or false"),
+    month: Optional[str] = Query(None, regex=r"^\d{4}-(0[1-9]|1[0-2])$", description="Month in YYYY-MM format"),
+    search: Optional[str] = Query(None, min_length=1, description="Search expense notes (case-insensitive, partial match)"),
+    page: int = Query(1, gt=0, description="Pagination: page number (starting from 1)"),
     db: Session = Depends(get_db),
     current_user: DbUser = Depends(get_current_user)
 ):
     query = db.query(DbExpense).filter(DbExpense.user_id == current_user.id)
 
     # Apply filters
-    if category:
-        query = query.filter(DbExpense.category.has(name=category))
+    if category and category.strip():
+       query = query.filter(DbExpense.category.has(DbCategory.name.ilike(f"%{category.strip()}%")))
+
     if recurring is not None:
         query = query.filter(DbExpense.recurring == recurring)
-    if month:
-        try:
-            date = datetime.strptime(month, '%Y-%m')
-            query = query.filter(
-                extract('year', DbExpense.date) == date.year,
-                extract('month', DbExpense.date) == date.month
-            )
-        except ValueError:
-            raise HTTPException(
-                status_code=400, detail="Invalid month format. Use YYYY-MM")
-    if search:
-        query = query.filter(DbExpense.note.like(f"%{search}%"))
 
-    # Add sorting
+    if month:
+        date = datetime.strptime(month, '%Y-%m')
+        start_date = date.replace(day=1)
+        last_day = monthrange(date.year, date.month)[1]
+        end_date = date.replace(day=last_day)
+        query = query.filter(DbExpense.date.between(start_date, end_date))
+
+    if search and search.strip():
+        query = query.filter(DbExpense.note.ilike(f"%{search.strip()}%"))
+
+    # Sort by most recent date
     query = query.order_by(DbExpense.date.desc())
 
     # Pagination
     limit = 10
     offset = (page - 1) * limit
     expenses = query.offset(offset).limit(limit).all()
+
     return expenses
 
 
@@ -203,14 +203,14 @@ def get_expenses_csv(
     } for expense in expenses]
 
     # Create CSV
-    df = pd.DataFrame(expense_data)
-    stream = io.StringIO()
-    df.to_csv(stream, index=False)
+    def iter_csv():
+        df = pd.DataFrame(expense_data)
+        yield df.to_csv(index=False)
 
-    response = StreamingResponse(
-        iter([stream.getvalue()]),
+    return StreamingResponse(
+        iter_csv(),
         media_type="text/csv",
         headers={
-            "Content-Disposition": f"attachment; filename=expenses_{datetime.now().strftime('%Y%m%d')}.csv"}
+            "Content-Disposition": f"attachment; filename=expenses_{datetime.now().strftime('%Y%m%d')}.csv"
+        }
     )
-    return response

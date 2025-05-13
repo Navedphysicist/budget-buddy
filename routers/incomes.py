@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException,Query
 from sqlalchemy.orm import Session
 from sqlalchemy import extract
 from db.database import get_db
@@ -8,16 +8,17 @@ from schemas.income import Income as IncomeSchema, IncomeCreate, IncomeUpdate
 from typing import List, Optional
 from datetime import datetime
 from utils.auth import get_current_user
+from calendar import monthrange
 
 router = APIRouter()
 
 
 @router.get("/income", response_model=List[IncomeSchema])
 def get_incomes(
-    recurring: Optional[bool] = None,
-    source: Optional[str] = None,
-    month: Optional[str] = None,
-    top: Optional[int] = None,
+    recurring: Optional[bool] = Query(None, description="Filter by recurring status: true or false."),
+    source: Optional[str] = Query(None, description="Filter by income source."),
+    month: Optional[str] = Query(None, description="Filter by month in YYYY-MM format (e.g. 2024-08)"),
+    top: Optional[int] = Query(None, gt=0, description="Limit results to top N by date."),
     db: Session = Depends(get_db),
     current_user: DbUser = Depends(get_current_user)
 ):
@@ -25,15 +26,17 @@ def get_incomes(
 
     if recurring is not None:
         query = query.filter(DbIncome.is_recurring == recurring)
-    if source:
-        query = query.filter(DbIncome.source == source)
+    if source and source.strip():
+        query = query.filter(DbIncome.source.ilike(f"%{source}%"))
     if month:
         try:
-            date = datetime.strptime(month, '%Y-%m')
-            query = query.filter(
-                extract('year', DbIncome.date) == date.year,
-                extract('month', DbIncome.date) == date.month
-            )
+            date = datetime.strptime(month, "%Y-%m")
+            # First day of month
+            start_date = date.replace(day=1)
+            # Last day of month
+            last_day = monthrange(date.year, date.month)[1]
+            end_date = date.replace(day=last_day)
+            query = query.filter(DbIncome.date.between(start_date, end_date))
         except ValueError:
             raise HTTPException(
                 status_code=400, detail="Invalid month format. Use YYYY-MM")
@@ -74,7 +77,7 @@ def get_income(
     return income
 
 
-@router.put("/income/{income_id}", response_model=IncomeSchema)
+@router.patch("/income/{income_id}", response_model=IncomeSchema)
 def update_income(
     income_id: int,
     income: IncomeUpdate,

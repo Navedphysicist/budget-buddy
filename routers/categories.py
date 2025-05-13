@@ -14,22 +14,29 @@ def get_categories(db: Session = Depends(get_db)):
     categories = db.query(DbCategory).all()
     return categories
 
-@router.get("/category_expense", response_model=List[CategoryWithExpense])
+
+@router.get("/category_expense",response_model=List[CategoryWithExpense])
 def get_category_expenses(db: Session = Depends(get_db)):
-    query = db.query(
-        DbCategory,
-        func.coalesce(func.sum(DbExpense.amount), 0).label('expense')
-    ).outerjoin(DbExpense).group_by(DbCategory.id)
-    
-    result = query.all()
+    query = db.query(DbCategory,
+    func.coalesce(func.sum(DbExpense.amount), 0).label("expense")).outerjoin(DbExpense).group_by(DbCategory.id)
+
+    results = query.all()
+    print(results)
+
     categories = []
-    for row in result:
-        category_dict = row[0].__dict__
-        category_dict['expense'] = float(row[1])
-        categories.append(category_dict)
+    for category, expense in results:
+        categories.append({
+            "id": category.id,
+            "name": category.name,
+            "icon": category.icon,
+            "budget":category.budget,
+            "color": category.color,
+            "expense": float(expense)
+    })
     return categories
 
-@router.get("/category_budget", response_model=List[CategorySchema])
-def get_category_budgets(db: Session = Depends(get_db)):
-    categories = db.query(DbCategory).all()
-    return categories
+
+# @router.get("/category_budget", response_model=List[CategorySchema])
+# def get_category_budgets(db: Session = Depends(get_db)):
+#     categories = db.query(DbCategory).all()
+#     return categories

@@ -49,7 +49,7 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
     if not success:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to send verification code"
+            detail=f"Failed to send verification code {message}"
         )
 
     db.add(db_user)
@@ -89,7 +89,7 @@ def verify_user(verification: UserVerify, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=Dict[str, str])
-async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(DbUser).filter(DbUser.username == form_data.username).first()
     if not user:
         raise HTTPException(

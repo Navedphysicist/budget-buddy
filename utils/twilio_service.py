@@ -1,6 +1,7 @@
 from twilio.rest import Client
 import random
 from config import Settings
+import string
 
 settings = Settings()
 
@@ -12,9 +13,9 @@ class TwilioService:
                              settings.TWILIO_AUTH_TOKEN)
         self.from_number = settings.TWILIO_PHONE_NUMBER
 
-    def generate_verification_code(self):
-        """Generate a 6-digit verification code"""
-        return ''.join([str(random.randint(0, 9)) for _ in range(6)])
+    def generate_verification_code(self) -> str:
+        """Generate a 6-digit OTP code."""
+        return ''.join(random.choices(string.digits, k=6))
 
     def send_verification_code(self, phone_number: str, code: str):
         try:

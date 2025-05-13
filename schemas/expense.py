@@ -19,7 +19,7 @@ class ExpenseCreate(ExpenseBase):
 
 
 class ExpenseUpdate(BaseModel):
-    amount: Optional[str] = None
+    amount: Optional[int] = None
     date: date
     note: Optional[str] = None
     recurring: Optional[bool] = None
