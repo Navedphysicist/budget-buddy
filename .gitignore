@@ -17,4 +17,6 @@ env/
 *.env
 
 
-budget_buddy.db/
+*.db
+
+.DS_Store
