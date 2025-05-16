@@ -5,8 +5,8 @@ from db.database import get_db
 from models.user import DbUser
 from schemas.user import UserCreate, UserVerify
 from utils.twilio_service import TwilioService
-from utils.security import get_password_hash, verify_password
-from utils.token import create_access_token
+from utils.hash import get_password_hash, verify_password
+from utils.auth_token import create_access_token
 from typing import Dict
 
 router = APIRouter(

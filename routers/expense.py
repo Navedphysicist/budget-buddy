@@ -11,7 +11,7 @@ from typing import List, Optional
 from datetime import datetime
 import pandas as pd
 from fastapi.responses import StreamingResponse
-from utils.auth import get_current_user
+from utils.auth_token import get_current_user
 from calendar import monthrange
 
 router = APIRouter()

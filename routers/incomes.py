@@ -7,7 +7,7 @@ from models.user import DbUser
 from schemas.income import Income as IncomeSchema, IncomeCreate, IncomeUpdate
 from typing import List, Optional
 from datetime import datetime
-from utils.auth import get_current_user
+from utils.auth_token import get_current_user
 from calendar import monthrange
 
 router = APIRouter()
