@@ -1,9 +1,7 @@
 from twilio.rest import Client
 import random
-from config import Settings
+from config import settings
 import string
-
-settings = Settings()
 
 
 
