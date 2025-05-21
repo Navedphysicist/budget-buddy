@@ -8,9 +8,6 @@ class CategoryBase(BaseModel):
     budget: float = 0  
 
 
-class CategoryCreate(CategoryBase):
-    pass
-
 
 class Category(CategoryBase):
     id: int

@@ -6,9 +6,6 @@ class PaymentModeBase(BaseModel):
     icon: str
     color: Optional[str] = None
 
-class PaymentModeCreate(PaymentModeBase):
-    pass
-
 class PaymentMode(PaymentModeBase):
     id: int
     

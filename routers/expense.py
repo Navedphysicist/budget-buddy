@@ -211,6 +211,6 @@ def get_expenses_csv(
         iter_csv(),
         media_type="text/csv",
         headers={
-            "Content-Disposition": f"attachment; filename=expenses_{datetime.now().strftime('%Y%m%d')}.csv"
+            "Content-Disposition": f"attachment; filename=expenses.csv"
         }
     )
